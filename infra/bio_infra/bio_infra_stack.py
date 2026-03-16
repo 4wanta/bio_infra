@@ -50,12 +50,22 @@ class BioInfraStack(Stack):
             )
         )
 
+        compute_env_instance_role = iam.Role(
+            self, "ComputeEnvInstanceRole",
+            assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"),
+            ]
+        )
+
         # 4. 計算環境の作成
         compute_env = batch.ManagedEc2EcsComputeEnvironment(
             self, "BioInfraComputeEnv",
             vpc=vpc,
             spot=True,
             allocation_strategy=batch.AllocationStrategy.SPOT_CAPACITY_OPTIMIZED,
+            instance_role=compute_env_instance_role
         )
 
         # --- 重要：エスケープハッチ (赤い波線を消すための書き方) ---

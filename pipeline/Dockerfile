@@ -8,6 +8,7 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     picard=3.1.1 \
     homer=4.11 \
     macs3=3.0.1 \
+    deeptools=3.5.5 \
     awscli \
     && micromamba clean --all --yes
 
