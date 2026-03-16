@@ -1,10 +1,35 @@
+# --- General ---
+.DS_Store
 *.swp
-package-lock.json
-__pycache__
-.pytest_cache
-.venv
-*.egg-info
+*.bak
+.idea/
+.vscode/
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# --- Python / Infrastructure (infra/) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+infra/.venv/
+infra/cdk.out/
+infra/.pytest_cache/
+.env
+
+# --- Nextflow / Pipeline (pipeline/) ---
+pipeline/.nextflow/
+pipeline/.nextflow.log*
+pipeline/work/
+pipeline/cmd_out
+pipeline/cmd_log
+pipeline/cmd_err
+.nextflow/
+work/
+.nextflow.log*
+
+# --- Binaries & Large Files ---
+# pipeline/bin/ 内のバイナリを管理したくない場合は以下を有効化
+# pipeline/bin/*
+# !pipeline/bin/*.sh
+nextflow
