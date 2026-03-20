@@ -3,7 +3,8 @@
 *.swp
 *.bak
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 
 # --- Python / Infrastructure (infra/) ---
 __pycache__/

@@ -1,0 +1,18 @@
+{
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.nextflow": true,
+    "**/.nextflow.log*": true,
+    "**/__pycache__": true,
+    "**/*.py[cod]": true,
+    "**/.pytest_cache": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/cdk.out": true,
+    "pipeline/work": true,
+    "work": true,
+    "pipeline/cmd_out": true,
+    "pipeline/cmd_log": true,
+    "pipeline/cmd_err": true
+  }
+}
