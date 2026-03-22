@@ -131,10 +131,8 @@ process MAPPING_PE {
     INDEX_DIR="./${params.hisat2_record}"
     INDEX_BASE="${INDEX_DIR}/genome"
 
-    if [ ! -e "${INDEX_BASE}.1.ht2" ]; then
-        aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
-        tar zxvf "${INDEX_TAR}"
-    fi
+    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
+    tar zxvf "${INDEX_TAR}"
 
     HISATOPT="-x ${INDEX_BASE} -p ${task.cpus}"
 
@@ -174,10 +172,8 @@ process MAPPING_SE {
     INDEX_DIR="./${params.hisat2_record}"
     INDEX_BASE="${INDEX_DIR}/genome"
 
-    if [ ! -e "${INDEX_BASE}.1.ht2" ]; then
-        aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
-        tar zxvf "${INDEX_TAR}"
-    fi
+    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
+    tar zxvf "${INDEX_TAR}"
 
     HISATOPT="-x ${INDEX_BASE} -p ${task.cpus}"
 
@@ -192,29 +188,82 @@ process MAPPING_SE {
     """
 }
 
-process COUNT {
+process COUNT_PE {
+    tag "${sample_id}"
     cpus 8
     memory '32 GB'
 
-    publishDir "${params.outdir}/counts", mode: 'copy'
+    publishDir "${params.outdir}/RSEM/${sample_id}", mode: 'copy'
 
     input:
-    tuple path(bams), path(gtf)
+    tuple val(sample_id), path(reads)
 
     output:
-    path 'gene_counts.txt'
-    path 'gene_counts.txt.summary'
+    path "${sample_id}.genes.results"
+    path "${sample_id}.isoforms.results"
+    path "${sample_id}.transcript_sorted.bam"
+    path "${sample_id}.transcript_sorted.bam.bai"
 
     script:
-    def bam_args = (bams instanceof List ? bams : [bams]).collect { it.toString() }.join(' ')
     """
-    featureCounts -T ${task.cpus} -a ${gtf} -o gene_counts.txt ${bam_args}
+    set -euo pipefail
+
+    # RSEM reference (rsem_run.sh: s3://.../ref/\${SPECIES}/rsem_\${RECORD}.tar.gz -> ./rsem/\${RECORD}/)
+    RSEM_TAR="./rsem_${params.rsem_record}.tar.gz"
+    RSEM_REF="./rsem/${params.rsem_record}"
+
+    aws s3 cp "${params.rsem_reference}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz" "\${RSEM_TAR}"
+    tar zxvf "\${RSEM_TAR}"
+
+    rsem-calculate-expression -p ${task.cpus} \\
+        --paired-end ${sample_id}_1.fastq.P.qtrim.gz ${sample_id}_2.fastq.P.qtrim.gz \\
+        --bowtie2 \\
+        "\${RSEM_REF}" \\
+        ${sample_id}
+
+    samtools sort -@ ${task.cpus} ${sample_id}.transcript.bam -o ${sample_id}.transcript_sorted.bam
+    samtools index ${sample_id}.transcript_sorted.bam
+    """
+}
+
+process COUNT_SE {
+    tag "${sample_id}"
+    cpus 8
+    memory '32 GB'
+
+    publishDir "${params.outdir}/RSEM/${sample_id}", mode: 'copy'
+
+    input:
+    tuple val(sample_id), path(read)
+
+    output:
+    path "${sample_id}.genes.results"
+    path "${sample_id}.isoforms.results"
+    path "${sample_id}.transcript_sorted.bam"
+    path "${sample_id}.transcript_sorted.bam.bai"
+
+    script:
+    """
+    set -euo pipefail
+
+    RSEM_TAR="./rsem_${params.rsem_record}.tar.gz"
+    RSEM_REF="./rsem/${params.rsem_record}"
+
+    aws s3 cp "${params.rsem_reference}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz" "\${RSEM_TAR}"
+    tar zxvf "\${RSEM_TAR}"
+
+    rsem-calculate-expression -p ${task.cpus} \\
+        ${read} \\
+        --bowtie2 \\
+        "\${RSEM_REF}" \\
+        ${sample_id}
+
+    samtools sort -@ ${task.cpus} ${sample_id}.transcript.bam -o ${sample_id}.transcript_sorted.bam
+    samtools index ${sample_id}.transcript_sorted.bam
     """
 }
 
 workflow {
-    gtf_file = channel.fromPath(params.gtf).first()
-
     def rt = (params.read_type ?: 'PE').toUpperCase()
 
     if (rt == 'SE') {
@@ -231,25 +280,13 @@ workflow {
         TRIMMING_SE(reads_se_ch)
         QC_SE(TRIMMING_SE.out.reads_pass)
         MAPPING_SE(QC_SE.out.reads_pass)
-
-        count_in = MAPPING_SE.out.bam
-            .map { it -> it[1] }
-            .collect()
-            .combine(gtf_file)
-
-        COUNT(count_in)
+        COUNT_SE(QC_SE.out.reads_pass)
     } else {
         reads_pe_ch = Channel.fromFilePairs("${params.fastq_dir}/*_{1,2}.fastq.gz")
 
         TRIMMING_PE(reads_pe_ch)
         QC_PE(TRIMMING_PE.out.reads_pass)
         MAPPING_PE(QC_PE.out.reads_pass)
-
-        count_in = MAPPING_PE.out.bam
-            .map { it -> it[1] }
-            .collect()
-            .combine(gtf_file)
-
-        COUNT(count_in)
+        COUNT_PE(QC_PE.out.reads_pass)
     }
 }

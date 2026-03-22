@@ -1,7 +1,10 @@
 FROM mambaorg/micromamba:1.5.6
 
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
-    subread=2.0.6 \
+    rsem \
+    bowtie2 \
+    samtools \
+    awscli \
     && micromamba clean --all --yes
 
 USER root
