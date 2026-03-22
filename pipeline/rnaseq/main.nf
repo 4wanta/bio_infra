@@ -279,14 +279,14 @@ workflow {
 
         TRIMMING_SE(reads_se_ch)
         QC_SE(TRIMMING_SE.out.reads_pass)
-        MAPPING_SE(QC_SE.out.reads_pass)
-        COUNT_SE(QC_SE.out.reads_pass)
+        MAPPING_SE(TRIMMING_SE.out.reads_pass)
+        COUNT_SE(TRIMMING_SE.out.reads_pass)
     } else {
         reads_pe_ch = Channel.fromFilePairs("${params.fastq_dir}/*_{1,2}.fastq.gz")
 
         TRIMMING_PE(reads_pe_ch)
         QC_PE(TRIMMING_PE.out.reads_pass)
-        MAPPING_PE(QC_PE.out.reads_pass)
-        COUNT_PE(QC_PE.out.reads_pass)
+        MAPPING_PE(TRIMMING_PE.out.reads_pass)
+        COUNT_PE(TRIMMING_PE.out.reads_pass)
     }
 }
