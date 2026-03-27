@@ -1,6 +1,7 @@
 nextflow.enable.dsl = 2
 
 process TRIMMING_PE {
+    label 'qc'
     tag "${sample_id}"
     cpus 4
     memory '8 GB'
@@ -17,6 +18,7 @@ process TRIMMING_PE {
 
     script:
     """
+    set -euo pipefail
     TRIMMOMATIC_JAR=\$(ls -1 /opt/conda/share/trimmomatic-*/trimmomatic*.jar 2>/dev/null | awk 'NR==1{print; exit}')
     ADAPTER_DIR=\$(ls -d /opt/conda/share/trimmomatic-*/adapters 2>/dev/null | awk 'NR==1{print; exit}')
 
@@ -35,6 +37,7 @@ process TRIMMING_PE {
 }
 
 process TRIMMING_SE {
+    label 'qc'
     tag "${sample_id}"
     cpus 4
     memory '8 GB'
@@ -49,6 +52,7 @@ process TRIMMING_SE {
 
     script:
     """
+    set -euo pipefail
     TRIMMOMATIC_JAR=\$(ls -1 /opt/conda/share/trimmomatic-*/trimmomatic*.jar 2>/dev/null | awk 'NR==1{print; exit}')
     ADAPTER_DIR=\$(ls -d /opt/conda/share/trimmomatic-*/adapters 2>/dev/null | awk 'NR==1{print; exit}')
 
@@ -66,6 +70,7 @@ process TRIMMING_SE {
 }
 
 process QC_PE {
+    label 'qc'
     tag "${sample_id}"
     cpus 4
     memory '8 GB'
@@ -82,11 +87,13 @@ process QC_PE {
 
     script:
     """
+    set -euo pipefail
     fastqc -t ${task.cpus} -o . ${reads[0]} ${reads[1]}
     """
 }
 
 process QC_SE {
+    label 'qc'
     tag "${sample_id}"
     cpus 4
     memory '8 GB'
@@ -103,11 +110,13 @@ process QC_SE {
 
     script:
     """
+    set -euo pipefail
     fastqc -t ${task.cpus} -o . ${read}
     """
 }
 
 process MAPPING_PE {
+    label 'mapping'
     tag "${sample_id}"
     cpus 16
     memory '64 GB'
@@ -138,8 +147,8 @@ process MAPPING_PE {
 
     # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
-        -1 ${sample_id}_1.fastq.P.qtrim.gz \\
-        -2 ${sample_id}_2.fastq.P.qtrim.gz \\
+        -1 ${reads[0]} \\
+        -2 ${reads[1]} \\
         -S - \\
     | samtools view -@ ${task.cpus} -bS - \\
     | samtools sort -@ ${task.cpus} -o ${sample_id}_sorted.bam -
@@ -149,6 +158,7 @@ process MAPPING_PE {
 }
 
 process MAPPING_SE {
+    label 'mapping'
     tag "${sample_id}"
     cpus 16
     memory '64 GB'
@@ -179,7 +189,7 @@ process MAPPING_SE {
 
     # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
-        -U ${sample_id}.fastq.qtrim.gz \\
+        -U ${read} \\
         -S - \\
     | samtools view -@ ${task.cpus} -bS - \\
     | samtools sort -@ ${task.cpus} -o ${sample_id}_sorted.bam -
@@ -189,6 +199,7 @@ process MAPPING_SE {
 }
 
 process COUNT_PE {
+    label 'count'
     tag "${sample_id}"
     cpus 8
     memory '32 GB'
@@ -216,7 +227,7 @@ process COUNT_PE {
     tar zxvf "\${RSEM_TAR}"
 
     rsem-calculate-expression -p ${task.cpus} \\
-        --paired-end ${sample_id}_1.fastq.P.qtrim.gz ${sample_id}_2.fastq.P.qtrim.gz \\
+        --paired-end ${reads[0]} ${reads[1]} \\
         --bowtie2 \\
         "\${RSEM_REF}" \\
         ${sample_id}
@@ -227,6 +238,7 @@ process COUNT_PE {
 }
 
 process COUNT_SE {
+    label 'count'
     tag "${sample_id}"
     cpus 8
     memory '32 GB'
