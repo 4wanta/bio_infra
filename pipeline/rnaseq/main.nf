@@ -138,12 +138,12 @@ process MAPPING_PE {
     # Extract HISAT2 index into the process workdir (avoid /mnt/genome caching).
     INDEX_TAR="./${params.hisat2_record}.tar.gz"
     INDEX_DIR="./${params.hisat2_record}"
-    INDEX_BASE="${INDEX_DIR}/genome"
+    INDEX_BASE="\${INDEX_DIR}/genome"
 
-    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
-    tar zxvf "${INDEX_TAR}"
+    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "\${INDEX_TAR}"
+    tar zxvf "\${INDEX_TAR}"
 
-    HISATOPT="-x ${INDEX_BASE} -p ${task.cpus}"
+    HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
 
     # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
@@ -180,12 +180,12 @@ process MAPPING_SE {
     # Extract HISAT2 index into the process workdir (avoid /mnt/genome caching).
     INDEX_TAR="./${params.hisat2_record}.tar.gz"
     INDEX_DIR="./${params.hisat2_record}"
-    INDEX_BASE="${INDEX_DIR}/genome"
+    INDEX_BASE="\${INDEX_DIR}/genome"
 
-    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "${INDEX_TAR}"
-    tar zxvf "${INDEX_TAR}"
+    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "\${INDEX_TAR}"
+    tar zxvf "\${INDEX_TAR}"
 
-    HISATOPT="-x ${INDEX_BASE} -p ${task.cpus}"
+    HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
 
     # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
