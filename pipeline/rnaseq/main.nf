@@ -4,6 +4,9 @@ def ticket    = params.input_path.split('/')[0]
 def fastq_dir = "${params.s3_bucket}/data/${params.input_path}"
 def outdir    = "${params.s3_bucket}/data/${ticket}/results_rnaseq"
 
+def hisat2_index_url = "${params.ref_base}/${params.hisat2_species}/${params.hisat2_record}.tar.gz"
+def rsem_index_url   = "${params.ref_base}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz"
+
 process TRIMMING_PE {
     label 'qc'
     tag "${sample_id}"
@@ -144,7 +147,7 @@ process MAPPING_PE {
     INDEX_DIR="./${params.hisat2_record}"
     INDEX_BASE="\${INDEX_DIR}/genome"
 
-    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "\${INDEX_TAR}"
+    aws s3 cp "${hisat2_index_url}" "\${INDEX_TAR}"
     tar zxvf "\${INDEX_TAR}"
 
     HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
@@ -186,7 +189,7 @@ process MAPPING_SE {
     INDEX_DIR="./${params.hisat2_record}"
     INDEX_BASE="\${INDEX_DIR}/genome"
 
-    aws s3 cp "${params.hisat2_reference}/${params.hisat2_species}/${params.hisat2_record}.tar.gz" "\${INDEX_TAR}"
+    aws s3 cp "${hisat2_index_url}" "\${INDEX_TAR}"
     tar zxvf "\${INDEX_TAR}"
 
     HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
@@ -227,7 +230,7 @@ process COUNT_PE {
     RSEM_TAR="./rsem_${params.rsem_record}.tar.gz"
     RSEM_REF="./rsem/${params.rsem_record}"
 
-    aws s3 cp "${params.rsem_reference}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz" "\${RSEM_TAR}"
+    aws s3 cp "${rsem_index_url}" "\${RSEM_TAR}"
     tar zxvf "\${RSEM_TAR}"
 
     rsem-calculate-expression -p ${task.cpus} \\
@@ -265,7 +268,7 @@ process COUNT_SE {
     RSEM_TAR="./rsem_${params.rsem_record}.tar.gz"
     RSEM_REF="./rsem/${params.rsem_record}"
 
-    aws s3 cp "${params.rsem_reference}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz" "\${RSEM_TAR}"
+    aws s3 cp "${rsem_index_url}" "\${RSEM_TAR}"
     tar zxvf "\${RSEM_TAR}"
 
     rsem-calculate-expression -p ${task.cpus} \\

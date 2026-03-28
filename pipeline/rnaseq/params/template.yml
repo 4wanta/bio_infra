@@ -1,0 +1,21 @@
+# RNA-seq パイプライン パラメータテンプレート
+#
+# 使い方:
+#   1. このファイルをコピーして解析ごとのYAMLを作成する
+#      cp params/template.yml params/ticket12137.yml
+#   2. 値を編集する
+#   3. 実行する
+#      nextflow run main.nf -profile awsbatch -params-file params/ticket12137.yml
+
+input_path: "ticket12137/01_RawData"
+read_type: "PE"                       # PE or SE
+
+# HISAT2 マッピング用リファレンス
+# S3 パス: s3://<s3_bucket>/ref/<hisat2_species>/<hisat2_record>.tar.gz
+hisat2_species: "human"               # human / mouse
+hisat2_record: "hg38"                 # hg38 / GRCm39
+
+# RSEM 発現定量用リファレンス
+# S3 パス: s3://<s3_bucket>/ref/<rsem_species>/rsem_<rsem_record>.tar.gz
+rsem_species: "human"                 # human / mouse
+rsem_record: "hg38"                   # hg38 / GRCm39
