@@ -27,7 +27,12 @@ class BioInfraStack(Stack):
         bucket_arn = "arn:aws:s3:::ci-genome-tokyo"
         batch_job_role.add_to_policy(
             iam.PolicyStatement(
-                actions=["s3:*"],
+                actions=[
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:ListBucket",
+                    "s3:GetBucketLocation",
+                ],
                 resources=[bucket_arn, f"{bucket_arn}/*"],
             )
         )
