@@ -1,12 +1,16 @@
 nextflow.enable.dsl = 2
 
+def ticket    = params.input_path.split('/')[0]
+def fastq_dir = "${params.s3_bucket}/data/${params.input_path}"
+def outdir    = "${params.s3_bucket}/data/${ticket}/results_rnaseq"
+
 process TRIMMING_PE {
     label 'qc'
     tag "${sample_id}"
     cpus 4
     memory '8 GB'
 
-    publishDir "${params.outdir}/trimmed/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/trimmed/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -42,7 +46,7 @@ process TRIMMING_SE {
     cpus 4
     memory '8 GB'
 
-    publishDir "${params.outdir}/trimmed/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/trimmed/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
@@ -75,7 +79,7 @@ process QC_PE {
     cpus 4
     memory '8 GB'
 
-    publishDir "${params.outdir}/qc/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/qc/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -98,7 +102,7 @@ process QC_SE {
     cpus 4
     memory '8 GB'
 
-    publishDir "${params.outdir}/qc/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/qc/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
@@ -121,7 +125,7 @@ process MAPPING_PE {
     cpus 16
     memory '64 GB'
 
-    publishDir "${params.outdir}/mapping/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -163,7 +167,7 @@ process MAPPING_SE {
     cpus 16
     memory '64 GB'
 
-    publishDir "${params.outdir}/mapping/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
@@ -204,7 +208,7 @@ process COUNT_PE {
     cpus 8
     memory '32 GB'
 
-    publishDir "${params.outdir}/RSEM/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -243,7 +247,7 @@ process COUNT_SE {
     cpus 8
     memory '32 GB'
 
-    publishDir "${params.outdir}/RSEM/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
@@ -279,7 +283,7 @@ workflow {
     def rt = (params.read_type ?: 'PE').toUpperCase()
 
     if (rt == 'SE') {
-        reads_se_ch = Channel.fromPath("${params.fastq_dir}/*.fastq.gz")
+        reads_se_ch = Channel.fromPath("${fastq_dir}/*.fastq.gz")
             .filter { f ->
                 def name = f.getName()
                 !(name.endsWith('_1.fastq.gz') || name.endsWith('_2.fastq.gz'))
@@ -294,7 +298,7 @@ workflow {
         MAPPING_SE(TRIMMING_SE.out.reads_pass)
         COUNT_SE(TRIMMING_SE.out.reads_pass)
     } else {
-        reads_pe_ch = Channel.fromFilePairs("${params.fastq_dir}/*_{1,2}.fastq.gz")
+        reads_pe_ch = Channel.fromFilePairs("${fastq_dir}/*_{1,2}.fastq.gz")
 
         TRIMMING_PE(reads_pe_ch)
         QC_PE(TRIMMING_PE.out.reads_pass)
