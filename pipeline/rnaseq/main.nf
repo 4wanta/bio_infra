@@ -125,8 +125,8 @@ process QC_SE {
 process MAPPING_PE {
     label 'mapping'
     tag "${sample_id}"
-    cpus 16
-    memory '64 GB'
+    cpus 8
+    memory '32 GB'
 
     publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
@@ -148,17 +148,14 @@ process MAPPING_PE {
     INDEX_BASE="\${INDEX_DIR}/genome"
 
     aws s3 cp "${hisat2_index_url}" "\${INDEX_TAR}"
-    tar zxvf "\${INDEX_TAR}"
+    tar zxf "\${INDEX_TAR}"
 
     HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
 
-    # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
         -1 ${reads[0]} \\
         -2 ${reads[1]} \\
-        -S - \\
-    | samtools view -@ ${task.cpus} -bS - \\
-    | samtools sort -@ ${task.cpus} -o ${sample_id}_sorted.bam -
+    | samtools sort -@ ${task.cpus} -O bam -o ${sample_id}_sorted.bam
     samtools index ${sample_id}_sorted.bam
     samtools flagstat ${sample_id}_sorted.bam > ${sample_id}_flagstat.txt
     """
@@ -167,8 +164,8 @@ process MAPPING_PE {
 process MAPPING_SE {
     label 'mapping'
     tag "${sample_id}"
-    cpus 16
-    memory '64 GB'
+    cpus 8
+    memory '32 GB'
 
     publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
@@ -190,16 +187,13 @@ process MAPPING_SE {
     INDEX_BASE="\${INDEX_DIR}/genome"
 
     aws s3 cp "${hisat2_index_url}" "\${INDEX_TAR}"
-    tar zxvf "\${INDEX_TAR}"
+    tar zxf "\${INDEX_TAR}"
 
     HISATOPT="-x \${INDEX_BASE} -p ${task.cpus}"
 
-    # Write SAM to stdout and pipe directly to BAM+sort (avoid writing *_hits.sam).
     hisat2 \${HISATOPT} \\
         -U ${read} \\
-        -S - \\
-    | samtools view -@ ${task.cpus} -bS - \\
-    | samtools sort -@ ${task.cpus} -o ${sample_id}_sorted.bam -
+    | samtools sort -@ ${task.cpus} -O bam -o ${sample_id}_sorted.bam
     samtools index ${sample_id}_sorted.bam
     samtools flagstat ${sample_id}_sorted.bam > ${sample_id}_flagstat.txt
     """
@@ -231,7 +225,7 @@ process COUNT_PE {
     RSEM_REF="./rsem/${params.rsem_record}"
 
     aws s3 cp "${rsem_index_url}" "\${RSEM_TAR}"
-    tar zxvf "\${RSEM_TAR}"
+    tar zxf "\${RSEM_TAR}"
 
     rsem-calculate-expression -p ${task.cpus} \\
         --paired-end ${reads[0]} ${reads[1]} \\
@@ -269,7 +263,7 @@ process COUNT_SE {
     RSEM_REF="./rsem/${params.rsem_record}"
 
     aws s3 cp "${rsem_index_url}" "\${RSEM_TAR}"
-    tar zxvf "\${RSEM_TAR}"
+    tar zxf "\${RSEM_TAR}"
 
     rsem-calculate-expression -p ${task.cpus} \\
         ${read} \\
