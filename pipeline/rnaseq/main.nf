@@ -126,7 +126,7 @@ process MAPPING_PE {
     label 'mapping'
     tag "${sample_id}"
     cpus 8
-    memory '32 GB'
+    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
     publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
@@ -165,7 +165,7 @@ process MAPPING_SE {
     label 'mapping'
     tag "${sample_id}"
     cpus 8
-    memory '32 GB'
+    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
     publishDir "${outdir}/mapping/${sample_id}", mode: 'copy'
 
@@ -203,7 +203,7 @@ process COUNT_PE {
     label 'count'
     tag "${sample_id}"
     cpus 8
-    memory '32 GB'
+    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
     publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
 
@@ -242,7 +242,7 @@ process COUNT_SE {
     label 'count'
     tag "${sample_id}"
     cpus 8
-    memory '32 GB'
+    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
     publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
 

@@ -70,11 +70,14 @@ class BioInfraStack(Stack):
             vpc=vpc,
             spot=True,
             allocation_strategy=batch.AllocationStrategy.SPOT_CAPACITY_OPTIMIZED,
+            maxv_cpus=640,
             instance_types=[
-                ec2.InstanceType("r5.2xlarge"),   # 8 vCPU / 64 GB
-                ec2.InstanceType("r5.4xlarge"),   # 16 vCPU / 128 GB — 2 タスク同居可
+                ec2.InstanceType("m5.xlarge"),    # 4 vCPU / 16 GB  — QC/TRIMMING 向き
+                ec2.InstanceType("m5.2xlarge"),   # 8 vCPU / 32 GB  — MAPPING/COUNT (初回 24GB)
+                ec2.InstanceType("m6i.xlarge"),   # 4 vCPU / 16 GB
+                ec2.InstanceType("m6i.2xlarge"),  # 8 vCPU / 32 GB
+                ec2.InstanceType("r5.2xlarge"),   # 8 vCPU / 64 GB  — リトライ時 32GB のフォールバック
                 ec2.InstanceType("r6i.2xlarge"),  # 8 vCPU / 64 GB
-                ec2.InstanceType("r6i.4xlarge"),  # 16 vCPU / 128 GB
             ],
             instance_role=compute_env_instance_role,
         )
