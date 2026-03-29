@@ -2,7 +2,7 @@ nextflow.enable.dsl = 2
 
 def ticket    = params.input_path.split('/')[0]
 def fastq_dir = "${params.s3_bucket}/data/${params.input_path}"
-def outdir    = "${params.s3_bucket}/data/${ticket}/results_rnaseq"
+def outdir    = "${params.s3_bucket}/data/${ticket}"
 
 def hisat2_index_url = "${params.ref_base}/${params.hisat2_species}/${params.hisat2_record}.tar.gz"
 def rsem_index_url   = "${params.ref_base}/${params.rsem_species}/rsem_${params.rsem_record}.tar.gz"
@@ -13,7 +13,7 @@ process TRIMMING_PE {
     cpus 4
     memory '8 GB'
 
-    publishDir "${outdir}/trimmed/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/trimmed", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -49,7 +49,7 @@ process TRIMMING_SE {
     cpus 4
     memory '8 GB'
 
-    publishDir "${outdir}/trimmed/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/trimmed", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
@@ -205,7 +205,7 @@ process COUNT_PE {
     cpus 8
     memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
-    publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/RSEM", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads)
@@ -244,7 +244,7 @@ process COUNT_SE {
     cpus 8
     memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
 
-    publishDir "${outdir}/RSEM/${sample_id}", mode: 'copy'
+    publishDir "${outdir}/RSEM", mode: 'copy'
 
     input:
     tuple val(sample_id), path(read)
