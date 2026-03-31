@@ -202,8 +202,8 @@ process MAPPING_SE {
 process COUNT_PE {
     label 'count'
     tag "${sample_id}"
-    cpus 8
-    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
+    cpus 16
+    memory { task.attempt <= 1 ? '48 GB' : '64 GB' }
 
     publishDir "${outdir}/RSEM", mode: 'copy'
 
@@ -241,8 +241,8 @@ process COUNT_PE {
 process COUNT_SE {
     label 'count'
     tag "${sample_id}"
-    cpus 8
-    memory { task.attempt <= 1 ? '24 GB' : '32 GB' }
+    cpus 16
+    memory { task.attempt <= 1 ? '48 GB' : '64 GB' }
 
     publishDir "${outdir}/RSEM", mode: 'copy'
 
